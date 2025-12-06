@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальная библиотека</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Музыкальная библиотека</h1>
+            <nav>
+                <div id="user-info" style="display: none;">
+                    <span id="welcome-message"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Выйти</button>
+                </div>
+                <div id="auth-buttons">
+                    <button id="login-btn" class="btn btn-primary">Вход</button>
+                    <button id="register-btn" class="btn btn-secondary">Регистрация</button>
+                </div>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            <!-- Login/Register forms will be shown here initially -->
+            <section id="auth-section" class="auth-section">
+                <div class="auth-container">
+                    <div id="login-form-container">
+                        <h2>Вход в систему</h2>
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label for="login-input">Логин:</label>
+                                <input type="text" id="login-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password-input">Пароль:</label>
+                                <input type="password" id="password-input" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                        </form>
+                    </div>
+                    
+                    <div id="register-form-container" style="display: none;">
+                        <h2>Регистрация</h2>
+                        <form id="register-form">
+                            <div class="form-group">
+                                <label for="reg-login-input">Логин:</label>
+                                <input type="text" id="reg-login-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-password-input">Пароль:</label>
+                                <input type="password" id="reg-password-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-first-name-input">Имя:</label>
+                                <input type="text" id="reg-first-name-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-last-name-input">Фамилия:</label>
+                                <input type="text" id="reg-last-name-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-email-input">Email:</label>
+                                <input type="email" id="reg-email-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                        </form>
+                        <button id="show-login-btn" class="btn btn-secondary">Уже есть аккаунт? Войти</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard section (shown after login) -->
+            <section id="dashboard-section" style="display: none;">
+                <div class="dashboard">
+                    <aside class="sidebar">
+                        <ul class="nav-menu">
+                            <li><a href="#" class="nav-link active" data-tab="profile">Профиль</a></li>
+                            <li><a href="#" class="nav-link" data-tab="tracks">Мои треки</a></li>
+                            <li><a href="#" class="nav-link" data-tab="search">Поиск треков</a></li>
+                            <li><a href="#" class="nav-link" data-tab="collections">Коллекции</a></li>
+                            <li id="admin-menu-item" style="display: none;"><a href="#" class="nav-link" data-tab="admin">Администрирование</a></li>
+                            <li id="audit-menu-item" style="display: none;"><a href="#" class="nav-link" data-tab="audit">Журнал аудита</a></li>
+                        </ul>
+                    </aside>
+                    
+                    <div class="content-area">
+                        <!-- Profile Tab -->
+                        <div id="profile-tab" class="tab-content active-tab">
+                            <h2>Профиль пользователя</h2>
+                            <div id="profile-info">
+                                <p>Загрузка профиля...</p>
+                            </div>
+                            <div id="profile-form" style="display: none;">
+                                <h3>Редактировать профиль</h3>
+                                <form id="update-profile-form">
+                                    <div class="form-group">
+                                        <label for="profile-first-name">Имя:</label>
+                                        <input type="text" id="profile-first-name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profile-last-name">Фамилия:</label>
+                                        <input type="text" id="profile-last-name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profile-email">Email:</label>
+                                        <input type="email" id="profile-email">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="profile-avatar">Аватар (URL):</label>
+                                        <input type="text" id="profile-avatar">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                                </form>
+                            </div>
+                            <button id="edit-profile-btn" class="btn btn-secondary">Редактировать профиль</button>
+                        </div>
+                        
+                        <!-- Tracks Tab -->
+                        <div id="tracks-tab" class="tab-content">
+                            <h2>Мои треки</h2>
+                            <button id="add-track-btn" class="btn btn-primary">Добавить трек</button>
+                            
+                            <div id="add-track-form" style="display: none;">
+                                <h3>Добавить новый трек</h3>
+                                <form id="new-track-form">
+                                    <div class="form-group">
+                                        <label for="track-title">Название:</label>
+                                        <input type="text" id="track-title" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="track-artist">Исполнитель:</label>
+                                        <select id="track-artist" required>
+                                            <option value="">Выберите исполнителя</option>
+                                        </select>
+                                        <button type="button" id="add-artist-btn" class="btn btn-small">+</button>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="track-genre">Жанр:</label>
+                                        <select id="track-genre" required>
+                                            <option value="">Выберите жанр</option>
+                                        </select>
+                                        <button type="button" id="add-genre-btn" class="btn btn-small">+</button>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="track-bpm">BPM:</label>
+                                        <input type="number" id="track-bpm">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="track-duration">Длительность (сек):</label>
+                                        <input type="number" id="track-duration">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Сохранить трек</button>
+                                    <button type="button" id="cancel-track-btn" class="btn btn-secondary">Отмена</button>
+                                </form>
+                            </div>
+                            
+                            <div id="tracks-list">
+                                <p>Загрузка треков...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Tab -->
+                        <div id="search-tab" class="tab-content">
+                            <h2>Поиск треков</h2>
+                            <form id="search-form">
+                                <div class="form-group">
+                                    <label for="search-title">Название:</label>
+                                    <input type="text" id="search-title">
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-artist">Исполнитель:</label>
+                                    <input type="text" id="search-artist">
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-genre">Жанр:</label>
+                                    <input type="text" id="search-genre">
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-min-bpm">Мин. BPM:</label>
+                                    <input type="number" id="search-min-bpm">
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-max-bpm">Макс. BPM:</label>
+                                    <input type="number" id="search-max-bpm">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Найти</button>
+                            </form>
+                            
+                            <div id="search-results">
+                                <p>Введите критерии поиска</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Collections Tab -->
+                        <div id="collections-tab" class="tab-content">
+                            <h2>Мои коллекции</h2>
+                            <button id="add-collection-btn" class="btn btn-primary">Создать коллекцию</button>
+                            
+                            <div id="add-collection-form" style="display: none;">
+                                <h3>Создать новую коллекцию</h3>
+                                <form id="new-collection-form">
+                                    <div class="form-group">
+                                        <label for="collection-name">Название:</label>
+                                        <input type="text" id="collection-name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="collection-favorite"> Системная коллекция (любимые треки)
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Создать</button>
+                                    <button type="button" id="cancel-collection-btn" class="btn btn-secondary">Отмена</button>
+                                </form>
+                            </div>
+                            
+                            <div id="collections-list">
+                                <p>Загрузка коллекций...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Admin Tab -->
+                        <div id="admin-tab" class="tab-content">
+                            <h2>Администрирование</h2>
+                            <div id="admin-content">
+                                <h3>Все треки в системе</h3>
+                                <div id="all-tracks-list">
+                                    <p>Загрузка треков...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Audit Tab -->
+                        <div id="audit-tab" class="tab-content">
+                            <h2>Журнал аудита</h2>
+                            <div id="audit-log">
+                                <p>Загрузка журнала аудита...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
