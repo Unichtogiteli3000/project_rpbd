@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, render_template, redirect
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -507,6 +507,155 @@ def get_audit_log():
         conn.close()
         
         return jsonify({'audit_log': audit_log}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/logout')
+@login_required
+def logout_page():
+    """Logout page - clears session and redirects to main page"""
+    session.clear()
+    return redirect('/')
+
+# Routes for HTML pages
+@app.route('/')
+def index():
+    """Main page"""
+    if 'user_id' not in session:
+        return render_template('index.html')
+    # Redirect authenticated users to dashboard
+    return redirect('/tracks')
+
+@app.route('/profile')
+@login_required
+def profile():
+    """User profile page"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get user profile
+        cur.execute("SELECT * FROM get_user_profile(%s)", (session['user_id'],))
+        user = cur.fetchone()
+        
+        # Get favorite genres
+        cur.execute("""
+            SELECT g.name 
+            FROM user_favorite_genres ufg 
+            JOIN genres g ON ufg.genre_id = g.genre_id 
+            WHERE ufg.user_id = %s
+        """, (session['user_id'],))
+        favorite_genres = cur.fetchall()
+        
+        # Get favorite artists
+        cur.execute("""
+            SELECT a.name 
+            FROM user_favorite_artists ufa 
+            JOIN artists a ON ufa.artist_id = a.artist_id 
+            WHERE ufa.user_id = %s
+        """, (session['user_id'],))
+        favorite_artists = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('profile.html', user=user, favorite_genres=favorite_genres, favorite_artists=favorite_artists)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/tracks')
+@login_required
+def tracks():
+    """Tracks page"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if user is admin
+        cur.execute("SELECT role FROM \"user\" WHERE user_id = %s", (session['user_id'],))
+        user_role = cur.fetchone()['role']
+        
+        if user_role == 'admin':
+            cur.execute("SELECT * FROM get_all_tracks(%s)", (session['user_id'],))
+        else:
+            cur.execute("SELECT * FROM get_user_tracks(%s)", (session['user_id'],))
+        tracks = cur.fetchall()
+        
+        # Get all genres for filter
+        cur.execute("SELECT genre_id, name FROM genres ORDER BY name")
+        genres = cur.fetchall()
+        
+        # Get all artists for filter
+        cur.execute("SELECT artist_id, name FROM artists ORDER BY name")
+        artists = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        # Helper function to format duration
+        def format_duration(seconds):
+            if seconds is None:
+                return 'N/A'
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            secs = seconds % 60
+            if hours > 0:
+                return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+            else:
+                return f"{minutes:02d}:{secs:02d}"
+        
+        return render_template('tracks.html', tracks=tracks, genres=genres, artists=artists, format_duration=format_duration)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/collections')
+@login_required
+def collections():
+    """Collections page"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get user collections
+        cur.execute("SELECT * FROM get_user_collections(%s)", (session['user_id'],))
+        collections = cur.fetchall()
+        
+        # For each collection, get its tracks
+        for collection in collections:
+            cur.execute("SELECT * FROM get_collection_tracks(%s, %s)", (collection['collection_id'], session['user_id']))
+            collection['tracks'] = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('collections.html', collections=collections)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+@admin_required
+def admin_panel():
+    """Admin panel page"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Get all tracks
+        cur.execute("SELECT * FROM get_all_tracks(%s)", (session['user_id'],))
+        tracks = cur.fetchall()
+        
+        # Get all users
+        cur.execute("SELECT user_id, login, first_name, last_name, email, created_at FROM \"user\" ORDER BY created_at")
+        users = cur.fetchall()
+        
+        # Get audit log
+        cur.execute("SELECT * FROM get_audit_log(%s)", (session['user_id'],))
+        audit_log = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('admin.html', tracks=tracks, users=users, audit_log=audit_log)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
